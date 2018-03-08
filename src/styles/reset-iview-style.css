@@ -1,0 +1,13 @@
+td,
+th {
+    text-align: center !important;
+}
+
+.ivu-steps-head,
+.ivu-steps-title {
+    background-color: #f0f0f0 !important;
+}
+
+.ivu-steps-item .ivu-steps-tail>i {
+    background-color: #dedede !important;
+}
