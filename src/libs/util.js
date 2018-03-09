@@ -1,3 +1,4 @@
+import axios from 'axios';
 import env from '../../build/env';
 import semver from 'semver';
 import packjson from '../../package.json';
@@ -5,21 +6,25 @@ import packjson from '../../package.json';
 let util = {
 
 };
-util.title = function(title) {
-    title = title || '后台管理';
+util.title = function (title) {
+    title = title || 'iView admin';
     window.document.title = title;
 };
 
-const ajaxUrl = env === 'development' ?
-    'http://127.0.0.1:8888' :
-    env === 'production' ?
-    'https://www.url.com' :
-    'https://debug.url.com';
+const ajaxUrl = env === 'development'
+    ? 'http://127.0.0.1:8888'
+    : env === 'production'
+        ? 'https://www.url.com'
+        : 'https://debug.url.com';
 
+util.ajax = axios.create({
+    baseURL: ajaxUrl,
+    timeout: 30000
+});
 
-util.inOf = function(arr, targetArr) {
+util.inOf = function (arr, targetArr) {
     let res = true;
-    arr.map(item => {
+    arr.forEach(item => {
         if (targetArr.indexOf(item) < 0) {
             res = false;
         }
@@ -27,7 +32,7 @@ util.inOf = function(arr, targetArr) {
     return res;
 };
 
-util.oneOf = function(ele, targetArr) {
+util.oneOf = function (ele, targetArr) {
     if (targetArr.indexOf(ele) >= 0) {
         return true;
     } else {
@@ -35,15 +40,15 @@ util.oneOf = function(ele, targetArr) {
     }
 };
 
-util.showThisRoute = function(itAccess, currentAccess) {
+util.showThisRoute = function (itAccess, currentAccess) {
     if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
         return util.oneOf(currentAccess, itAccess);
     } else {
-        return itAccess > currentAccess;
+        return itAccess === currentAccess;
     }
 };
 
-util.getRouterObjByName = function(routers, name) {
+util.getRouterObjByName = function (routers, name) {
     if (!name || !routers || !routers.length) {
         return null;
     }
@@ -61,7 +66,7 @@ util.getRouterObjByName = function(routers, name) {
     return null;
 };
 
-util.handleTitle = function(vm, item) {
+util.handleTitle = function (vm, item) {
     if (typeof item.title === 'object') {
         return vm.$t(item.title.i18n);
     } else {
@@ -69,7 +74,7 @@ util.handleTitle = function(vm, item) {
     }
 };
 
-util.setCurrentPath = function(vm, name) {
+util.setCurrentPath = function (vm, name) {
     let title = '';
     let isOtherRouter = false;
     vm.$store.state.app.routers.forEach(item => {
@@ -93,13 +98,16 @@ util.setCurrentPath = function(vm, name) {
     });
     let currentPathArr = [];
     if (name === 'home_index') {
-        currentPathArr = [{
-            title: util.handleTitle(vm, util.getRouterObjByName(vm.$store.state.app.routers, 'home_index')),
-            path: '',
-            name: 'home_index'
-        }];
+        currentPathArr = [
+            {
+                title: util.handleTitle(vm, util.getRouterObjByName(vm.$store.state.app.routers, 'home_index')),
+                path: '',
+                name: 'home_index'
+            }
+        ];
     } else if ((name.indexOf('_index') >= 0 || isOtherRouter) && name !== 'home_index') {
-        currentPathArr = [{
+        currentPathArr = [
+            {
                 title: util.handleTitle(vm, util.getRouterObjByName(vm.$store.state.app.routers, 'home_index')),
                 path: '/home',
                 name: 'home_index'
@@ -112,7 +120,7 @@ util.setCurrentPath = function(vm, name) {
         ];
     } else {
         let currentPathObj = vm.$store.state.app.routers.filter(item => {
-            if (item.children.length === 1) {
+            if (item.children.length <= 1 && !!item.children.length ) {
                 return item.children[0].name === name;
             } else {
                 let i = 0;
@@ -128,13 +136,16 @@ util.setCurrentPath = function(vm, name) {
             }
         })[0];
         if (currentPathObj.children.length <= 1 && currentPathObj.name === 'home') {
-            currentPathArr = [{
-                title: '首页',
-                path: '',
-                name: 'home_index'
-            }];
+            currentPathArr = [
+                {
+                    title: '首页',
+                    path: '',
+                    name: 'home_index'
+                }
+            ];
         } else if (currentPathObj.children.length <= 1 && currentPathObj.name !== 'home') {
-            currentPathArr = [{
+            currentPathArr = [
+                {
                     title: '首页',
                     path: '/home',
                     name: 'home_index'
@@ -149,7 +160,8 @@ util.setCurrentPath = function(vm, name) {
             let childObj = currentPathObj.children.filter((child) => {
                 return child.name === name;
             })[0];
-            currentPathArr = [{
+            currentPathArr = [
+                {
                     title: '首页',
                     path: '/home',
                     name: 'home_index'
@@ -172,7 +184,7 @@ util.setCurrentPath = function(vm, name) {
     return currentPathArr;
 };
 
-util.openNewPage = function(vm, name, argu, query) {
+util.openNewPage = function (vm, name, argu, query) {
     let pageOpenedList = vm.$store.state.app.pageOpenedList;
     let openedPageLen = pageOpenedList.length;
     let i = 0;
@@ -190,11 +202,13 @@ util.openNewPage = function(vm, name, argu, query) {
         i++;
     }
     if (!tagHasOpened) {
-        let tag = vm.$store.state.app.tagsList;
-        tag.filter((item) => {
-            if (!!item) {
-                if (item.children) return name === item.children[0].name;
-                else return name === item.name;
+        let tag = vm.$store.state.app.tagsList.filter((item) => {
+            if(!!item) {
+                if (item.children) {
+                    return name === item.children[0].name;
+                } else {
+                    return name === item.name;
+                }
             }
         });
         tag = tag[0];
@@ -212,7 +226,7 @@ util.openNewPage = function(vm, name, argu, query) {
     vm.$store.commit('setCurrentPageName', name);
 };
 
-util.toDefaultPage = function(routers, name, route, next) {
+util.toDefaultPage = function (routers, name, route, next) {
     let len = routers.length;
     let i = 0;
     let notHandle = true;
@@ -232,24 +246,26 @@ util.toDefaultPage = function(routers, name, route, next) {
     }
 };
 
-util.fullscreenEvent = function(vm) {
+util.fullscreenEvent = function (vm) {
     vm.$store.commit('initCachepage');
     // 权限菜单过滤相关
     vm.$store.commit('updateMenulist');
     // 全屏相关
 };
 
-//时间戳转换日期字符串
-function add0(m) { return m < 10 ? '0' + m : m };
-util.format = function(t) {
-    var time = new Date(t);
-    var y = time.getFullYear();
-    var m = time.getMonth() + 1;
-    var d = time.getDate();
-    var h = time.getHours();
-    var mm = time.getMinutes();
-    var s = time.getSeconds();
-    return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+util.checkUpdate = function (vm) {
+    axios.get('https://api.github.com/repos/iview/iview-admin/releases/latest').then(res => {
+        let version = res.data.tag_name;
+        vm.$Notice.config({
+            duration: 0
+        });
+        if (semver.lt(packjson.version, version)) {
+            vm.$Notice.info({
+                title: 'iview-admin更新啦',
+                desc: '<p>iView-admin更新到了' + version + '了，去看看有哪些变化吧</p><a style="font-size:13px;" href="https://github.com/iview/iview-admin/releases" target="_blank">前往github查看</a>'
+            });
+        }
+    });
 };
 
 export default util;

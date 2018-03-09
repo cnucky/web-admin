@@ -23,39 +23,18 @@
 			@on-selection-change="select">
 			</Table>
 		</Row>
-		<Row>
-			<Page :total="pageNum" style='margin-top:8px' :current="current"   @on-change="changePage" show-elevator></Page>
+		<Row class="buttomPageContain">
+			<Page :total="pageNum" class="buttomPage" :current="current"   @on-change="changePage" show-elevator></Page>
 		</Row>
-		<Modal
-			v-model="operateModel"
-			title="提现审核"
-			ok-text="通过"
-			cancel-text="不通过"
-			type="info"
-			>
-			<div class="operateModelContain">
-				<p>当前用户：<span>{{ 'zsadasd' }}</span></p>
-				<p>提现数量：<span>{{ operateModelObj.totalAmount }}</span></p>
-				<p>申请时间：<span>{{ operateModelObj.createTime }}</span></p>
-			</div>
-
-			<div slot="footer" v-if="!!oprateStatus">
-				<Button type="info" size="large" @click="operateModel = false">关闭</Button>
-      </div>
-
-			<div slot="footer" v-if="!oprateStatus">
-				<Button type="text" size="large" @click="perNoPass">不通过</Button>
-				<Button type="info" size="large" @click="perPass">通过</Button>
-      </div>
-
-		</Modal>
 	</div>
 </template>
 
 <script>
 
-import axios from 'axios'; //！！
 import { withdrawManage, auditPass, auditNoPass } from '@/service/getData';
+
+import { setStore, getStore, removeStore } from '@/config/storage';
+
 
 export default{
 	data(){
@@ -97,7 +76,6 @@ export default{
 				{
 					title: '会员ID',
 					key: 'memberId',
-					className: 'memberIdClass'
 				},
 				{
 					title: '会员账号',
@@ -184,16 +162,20 @@ export default{
 							},
 							on: {
 								click: () => {
-									// alert(11);
-									this.$router.push('/finance/auditdetail')
-									// if( obj.row.status === 0 ) this.oprateStatus = 0;
-									// else this.oprateStatus = 1;
-									// this.operateModel = true;
-									
-									// this.operateModelObj = {
-									// 	totalAmount: obj.row.totalAmount+obj.row.coin.unit,
-									// 	createTime: obj.row.createTime
-									// }
+                  this.$router.push('/finance/auditdetail');
+                  console.log(obj);
+                  let userDetail = {
+										status: obj.row.status,
+                    memberId: obj.row.memberId,
+                    username: obj.row.memberUsername,
+                    realName: obj.row.memberRealName,
+                    coinUnit: obj.row.coin.unit,
+                    totalAmount: obj.row.totalAmount,
+                    fee: obj.row.fee,
+                    createTime: obj.row.createTime
+                  }
+                  removeStore('userDetails');
+                  setStore('userDetails', userDetail);
 								}
 							}
 						}, statusInner)
@@ -204,7 +186,6 @@ export default{
 		},
 	methods:{
 		checkable() { //能否点击
-		// console.log(this.userpage);
 			this.userpageCopy = []
 			this.userpage.forEach( item => {
 				if(!!item.status) item._disabled = true;
@@ -223,7 +204,6 @@ export default{
 		},
 		filterStatus(val) {
 			this.filterWithdrawWays(this.filterVal);
-
 			if (val === 1) this.filterStatusFn(0);
 			else if (val === 2) this.filterStatusFn(1);
 			else if (val === 3) this.filterStatusFn(2);
@@ -246,7 +226,7 @@ export default{
 						this.userpageCopy.push(item)
 					}
 				})
-			}
+			} 
 		},
 		select(selection){
 			this.selectedNumArr = [];
@@ -293,11 +273,8 @@ export default{
 			//可以直接设置为单页最大条目数10
 			withdrawManage({ pageNo: pageIndex, pageSize: 10 })
 			.then( res => {
-
 				this.userpage = res.data.list;
-
 				this.checkable();
-
 				this.filterWithdrawWays(this.filterVal);
 			})
 		}
@@ -334,11 +311,10 @@ export default{
 	.filterSelect{
 		width: 120px;
 	}
-	.operateModelContain{
-		font-size: 14px;
-		color: #666;
-	}
-	.operateModelContain span{
-		color: red;
-	}
+  .buttomPageContain{
+    text-align: right;
+  }
+  .buttomPage{
+    margin: 25px;
+  }
 </style>

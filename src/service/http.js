@@ -1,11 +1,10 @@
 import axios from 'axios'
 import qs from 'qs'
 //测试服务器
-// axios.defaults.baseURL = 'http://114.55.94.18:8090/';
 export const BASEURL = axios.defaults.baseURL = 'http://114.55.94.18:8090/';
 
 //个人服务器
-// export const BASEURL = axios.defaults.baseURL = 'http://192.168.80.159:8091/';
+// export const BASEURL = axios.defaults.baseURL = 'http://192.168.80.159:8091/'; //
 
 export const fetch = (url, params = {}) => {
     return new Promise((resolve, reject) => {

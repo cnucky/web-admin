@@ -179,6 +179,7 @@
         },
         watch: {
             '$route' (to) {
+                
                 this.$store.commit('setCurrentPageName', to.name);
                 let pathArr = util.setCurrentPath(this, to.name);
                 if (pathArr.length > 2) {
@@ -188,7 +189,7 @@
                 localStorage.currentPageName = to.name;
             },
             lang () {
-                util.setCurrentPath(this, this.$route.name); // 在切换语言时用于刷新面包屑
+                // util.setCurrentPath(this, this.$route.name); // 在切换语言时用于刷新面包屑
             }
         },
         mounted () {

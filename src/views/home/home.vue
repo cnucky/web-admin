@@ -140,14 +140,11 @@ import inforCard from "./components/inforCard.vue";
 import mapDataTable from "./components/mapDataTable.vue";
 import toDoListItem from "./components/toDoListItem.vue";
 
-import axios from "axios";
-import Cookies from "js-cookie";
-import store from "../../store";
+import { dashBoardInfo, signIn } from "@/service/getData";
+import { setStore, getStore, removeStore } from "@/config/storage.js"
+import { otherRouter, appRouter } from "@/router/router.js"
 
-import { dashBoardInfo } from "@/service/getData";
-import { routers, otherRouter, appRouter } from '@/router/router.js';
-
-
+import Main from '@/views/Main.vue';
 
 export default {
   name: "home",
@@ -211,12 +208,12 @@ export default {
     cancelAdd() {
       this.showAddNewTodo = false;
       this.newToDoItemValue = "";
-    }
+    },
   },
-  created() {
-    // /admin/system/statistics/dashboard
-	    // http://192.168.80.159:8091/admin/system/statistics/dashboard
-    // console.log(this.api.system.statistics);
+  beforeCreate() {
+      //初始化侧边栏
+  },
+created() {
     dashBoardInfo()
     .then(res => {
         this.count.createUser = parseInt(res.data.regMember);
@@ -227,10 +224,7 @@ export default {
         console.log(err);
       }
     );
-	},
-	beforeCreate() {
-		// somecode...
-	}
+  },
 };
 </script>
 

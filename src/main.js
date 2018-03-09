@@ -2,6 +2,9 @@ import Vue from 'vue';
 import iView from 'iview';
 import { router, initRouter } from './router/index';
 import { appRouter } from './router/router';
+// import { appRouter } from './views/home/home.vue';
+
+
 import store from './store';
 import App from './app.vue';
 import '@/locale';

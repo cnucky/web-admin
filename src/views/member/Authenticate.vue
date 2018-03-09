@@ -235,24 +235,3 @@ export default {
   }
 };
 </script>
-/*  return h('div', [
-                                h('Button', {
-                                    props: {
-                                        type: 'info',
-                                        size: 'small'
-                                    },
-                                    style: {
-                                        marginRight: '5px'
-                                    },
-                                    on: {
-                                        click: () => {
-                                    let query = {user_id:params.row.id,user_stastus: params.row.auditStatus};
-                                    this.$router.push({
-                                        name: 'mane_examine',
-                                        query:query
-                                    });
-
-                                        }
-                                    }
-                                }, '审核')
-                            ]);*/

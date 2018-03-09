@@ -49,9 +49,11 @@
 <script>
 
 import Cookies from "js-cookie";
-// import axios from "axios";
-// import qs from "qs";
 import store from "../store";
+
+import { setStore, getStore, removeStore } from "@/config/storage"
+
+import { otherRouter, appRouter } from "@/router/router.js"
 
 import { BASICURL, signIn } from "@/service/getData";
 
@@ -91,15 +93,15 @@ export default {
     handle () {
       signIn(this.form)
       .then( res => {
-        Cookies.set('cookieTest', '测试cookie！');
-
-          let loginin = res.code;
-          let realmenu = [];
-          let permissions = {};
+        console.log(res);
+        
+          var loginin = res.code;
+          var realmenu = [];
+          var permissions = {};
           if (loginin == "0") {
             let meuninfo = res.data;
             //该角色没有菜单数据
-            for (let i = 0; i < meuninfo.length; i++) {
+            for (var i = 0; i < meuninfo.length; i++) {
               this.processPermission(meuninfo[i]);
             }
             //存储信息
@@ -116,10 +118,25 @@ export default {
             this.errormessage = res.message;
             return false;
           }
+
+        removeStore('leftSidebarList');//登录失效时也需要清除数据
+
+        if (!res.code) {
+          setStore('leftSidebarList', res.data);
+          let leftSidebarList =  getStore('leftSidebarList');
+          let leftSidebarArr = JSON.parse(leftSidebarList);
+          // console.log();
+           console.log(leftSidebarArr);
+          
+        }
         }, err => {
           console.log(err);
         });
     }
+  },
+  beforeRouteLeave(to, from, next) {
+      window.location.reload();
+      next();
   },
   created () {
     this.logimg = `${ BASICURL }admin/captcha?cid=ADMIN_LOGIN`;
