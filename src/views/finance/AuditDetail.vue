@@ -29,8 +29,8 @@
       </div>  
       <p class="line"></p>
       <div class="btnContainer" v-if="!status">
-        <Button type="error" size="large">不通过</Button>
-        <Button type="success" size="large">通过</Button>
+        <Button type="error" size="large" @click="ifPass(false)">不通过</Button>
+        <Button type="success" size="large" @click="ifPass(true)">通过</Button>
       </div>
     </Row>
 
@@ -40,9 +40,7 @@
 <script>
 
 import { setStore, getStore, removeStore } from '@/config/storage';
-import { personalTradeInfo, allTradeInfo, withdrawManage } from '@/service/getData';
-
-
+import { auditPass, auditNoPass, withdrawManage, perTradeAll } from '@/service/getData';
 
 export default{
     data() {
@@ -124,18 +122,41 @@ export default{
     },
     methods: {
      changePage (pageIndex) {
-			withdrawManage({ pageNo: pageIndex, pageSize: 6, memberId: this.userInfo.memberId})
+			perTradeAll({ pageNo: pageIndex, pageSize: 6, memberId: this.userInfo.memberId})
 			.then( res => {
 			  this.trade_data = res.data.list;
 			})
+     },
+    ifPass (bol) {
+      let id = this.userInfo.id;
+      console.log(this.userInfo);
+      let fn = null;
+
+      if (bol)  fn = auditPass;
+      else fn = auditNoPass;
+
+      fn({ ids: [id] })
+      .then( res => {
+        // console.log(res);
+        if (!res.code) {
+          this.$Message.success('审核通过!');
+        }else {
+          this.$Message.error('审核不通过!');
+        }
+          this.$router.push('/finance/userwithdrawals');
+        // this.$Message.success('审核通过');
+        // this.$Message.warning('This is a warning tip');
+        // this.$Message.error('This is an error tip');
+       })
      }
     },
     created () {
       this.userInfo = JSON.parse(getStore('userDetails'));
       this.status = this.userInfo.status;
-      console.log(this.userInfo);
-      withdrawManage({ pageNo: 1, pageSize: 6,memberId: this.userInfo.memberId })
+      console.log(this.userInfo.memberId);
+      perTradeAll({ pageNo: 1, pageSize: 6,memberId: this.userInfo.memberId })
       .then( res => {
+        if(!res.code)
         this.trade_data = res.data.list;
         this.totalNum =  res.data.totalNumber;
         console.log(res);

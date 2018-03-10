@@ -8,5 +8,14 @@ export default {
         role: '/admin/system/role/all',
         rolePermission: '/admin/system/role/permission',
         statistics: '/admin/system/statistics/dashboard'
+    },
+    otc:{
+        //法币币种管理
+        OtcCoin: '/admin/otc/otc-coin/page-query',
+        detail:'admin/otc/otc-coin/detail',
+        update: 'admin/otc/otc-coin/update', 
+        create: 'admin/otc/otc-coin/create',
+        //法币广告管理
+        advertise:'admin/otc/advertise/page-query'
     }
 }

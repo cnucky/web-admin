@@ -1,48 +1,77 @@
 <template>
     <div>
-          <Row style='padding-bottom: 15px'>
-                    <Input   placeholder="请输入用户名..." style="width: 160px"  v-model="usernames"/>
-                      <Select v-model="userstatus" style="width:200px" placeholder='审核状态'>
-                      <Option value="0" label="待审核">
-                          <span>待审核</span>
-                      </Option>
-                      <Option value="1" label="审核失败">
-                          <span>审核失败</span>
-                      </Option>
-                      <Option value="2" label="审核成功">
-                        <span>审核成功</span>
-                      </Option>
-                      </Option>
-                  </Select>
-                    <Button type="primary" @click="searchname" size="small">查询</Button>
+          <Row class=" functionWrapper">
+            <div class="queryWrapper">
+              <Select v-model="userstatus" style="width:200px" placeholder='审核状态' @on-change="filterUser">
+                <Option  :value="statusInner.status" v-for="statusInner in  filterStatus" :key="statusInner.status">
+                   {{ statusInner.container }}
+                </Option>
+              </Select>
+            </div>
+
+            <!-- <div class="buttonWrapper">
+              <Button type="error">一键审核不通过</Button>
+              <Button type="success">一键审核通过</Button>
+            </div> -->
+
           </Row>
             <Row class="margin-top-10 searchable-table-con1">
-                <Table :columns="columns1" :data="userpage" border class='user_center'></Table>
+                <Table :columns="columns_first" :data="userpageCopy" border class='user_center'></Table>
             </Row>
-           <Page :total="parseInt(datalength)" style='margin-top:8px' :current="current"   @on-change="changePage" show-elevator></Page>
+            <div class="pageWrapper">
+              <Page  :total="totalNum" style='margin-top:8px' :current="current"   @on-change="changePage" show-elevator></Page>
+            </div>
     </div>
 </template>
+
 <script>
+
 import axios from "axios";
+import { MemberRealNameList } from '@/service/getData';
+import { setStore, getStore, removeStore } from '@/config/storage';
+import loginVue from '../login.vue';
+
 export default {
   data() {
     return {
-      userstatus: "",
-      usernames: "",
-      realName: "",
-      datalength: "",
+      userstatus: null,
+      realName: null,
+      totalNum: null,
       current: 1,
       pageIndex: 1,
       loading: true,
 
-      columns1: [
+      filterStatus: [
+        { status: 'all', container: '全部' },
+        { status: 0, container: '待审核' },
+        { status: 1, container: '审核失败' },
+        { status: 2, container: '审核成功' },
+      ],
+
+      
+
+      columns_first: [
+        {
+					type: 'selection',
+					width: 60,
+					align: 'center',
+        },
         {
           title: "编号",
-          key: "id"
+          key: "id",
+          width: 80
+        },
+         {
+          title: "会员ID",
+           width: 80,
+          render: (h, obj) => {
+            const row = obj.row;
+            const memberID = row.member.id;
+            return h("span", {}, memberID);
+          }
         },
         {
           title: "用户名",
-          key: "xxx",
           render: (h, params) => {
             const row = params.row;
             const member = row.member.username;
@@ -58,7 +87,10 @@ export default {
             return h("span", {}, member);
           }
         },
-
+        {
+          title: "身份证号码",
+          key: "idCard",
+        },
         {
           title: "注册时间",
           key: "createTime",
@@ -70,168 +102,103 @@ export default {
         },
         {
           title: "状态",
-          key: "auditStatus",
-          render: (h, params) => {
-            const row = params.row;
+          render: (h, obj) => {
+            const row = obj.row;
             let auditStatus = row.auditStatus;
-            if (auditStatus == "0") {
-              const auditStatus = (row.auditStatus = "待审核");
-            } else if (auditStatus == "1") {
-              const auditStatus = (row.auditStatus = "审核失败");
-            } else if (auditStatus == "2") {
-              const auditStatus = (row.auditStatus = "审核成功");
-            }
+            if (auditStatus === 0)  auditStatus  = "待审核";
+            else if (auditStatus == 1) auditStatus = "审核失败";
+            else if (auditStatus == 2)  auditStatus = "审核成功";
             return h("span", {}, auditStatus);
           }
         },
         {
           title: "操作",
-          key: "action",
-          width: 150,
-          align: "center",
-          render: (h, params) => {
-            const row = params.row;
-            let look = params.row.auditStatus;
-            if (look == "审核失败") {
-              return h("div", [
-                h(
-                  "Button",
-                  {
-                    props: {
-                      type: "error",
-                      size: "small"
-                    },
-                    style: {
-                      marginRight: "5px"
-                    },
-                    on: {
-                      click: () => {
-                        let query = {
-                          user_id: params.row.id,
-                          user_stastus: params.row.auditStatus
-                        };
-                        this.$router.push({
-                          name: "mane_examine",
-                          query: query
-                        });
-                      }
-                    }
-                  },
-                  "查看"
-                )
-              ]);
-            } else if (look == "审核成功") {
-              return h("div", [
-                h(
-                  "Button",
-                  {
-                    props: {
-                      type: "success",
-                      size: "small"
-                    },
-                    style: {
-                      marginRight: "5px"
-                    },
-                    on: {
-                      click: () => {
-                        let query = {
-                          user_id: params.row.id,
-                          user_stastus: params.row.auditStatus
-                        };
-                        this.$router.push({
-                          name: "mane_examine",
-                          query: query
-                        });
-                      }
-                    }
-                  },
-                  "查看"
-                )
-              ]);
+          render: (h, obj) => {
+            let status = obj.row.auditStatus;
+            let statusTxt = String;
+            let btnType = 'info';
+
+             if (!status) {
+              statusTxt = '待审核'; 
+              btnType = 'info';
             } else {
-              return h("div", [
-                h(
-                  "Button",
-                  {
-                    props: {
-                      type: "info",
-                      size: "small"
-                    },
-                    style: {
-                      marginRight: "5px"
-                    },
-                    on: {
-                      click: () => {
-                        let query = {
-                          user_id: params.row.id,
-                          user_stastus: params.row.auditStatus
-                        };
-                        this.$router.push({
-                          name: "mane_examine",
-                          query: query
-                        });
-                      }
-                    }
-                  },
-                  "查看"
-                )
-              ]);
+              statusTxt = '查看';
+              btnType = 'success';
             }
+            
+            return h("Button", {
+              props: {
+                type: btnType
+              },
+              	on: {
+								click: () => {
+                  removeStore('AuthenticateID');
+                  setStore('AuthenticateID',obj.row.id);
+                  this.$router.push('memberaudit/auditdetail');
+								}
+							}
+            }, statusTxt);
           }
-        }
+        },
       ],
-      userpage: []
+      userpage: [],
+      userpageCopy: []
     };
   },
   methods: {
-    refreshdata() {
-      axios.post("admin/memberApplication/pageQuery").then(res => {
-        this.userpage = res.data.data.list;
-        this.datalength = res.data.data.list.totalNumber;
-      });
+    filterUser(val) {
+      this.userpageCopy = [];
+      this.userpage.forEach( item => {
+        if(item.auditStatus === val) {
+          this.userpageCopy.push(item);
+        }
+      })
+      if (val === 'all') this.userpageCopy = this.userpage;
+     console.log(this.userpageCopy);
     },
-    searchname() {
-      if (this.userstatus == "") {
-        //状态空  查名字
-        axios
-          .post("admin/memberApplication/pageQuery?username=" + this.usernames)
-          .then(res => {
-            this.userpage = res.data.data.list;
-            this.datalength = res.data.data.list.totalNumber;
-          });
-      } else if (this.usernames == "") {
-        //状态
-        axios
-          .post(
-            "admin/memberApplication/pageQuery?auditStatus=" + this.userstatus
-          )
-          .then(res => {
-            this.userpage = res.data.data.list;
-            this.datalength = res.data.data.list.totalNumber;
-          });
-      } else {
-        axios
-          .post("admin/memberApplication/pageQuery?username=" + this.usernames)
-          .then(res => {
-            this.userstatus = "";
-            this.userpage = res.data.data.list;
-            this.datalength = res.data.data.list.totalNumber;
-          });
-      }
-    },
-
     //分页
     changePage(pageIndex) {
-      this.pageIndex = pageIndex;
-      axios
-        .post("admin/memberApplication/pageQuery?pageNo=" + this.pageIndex)
-        .then(res => {
-          this.userpage = res.data.data.list;
-        });
+      MemberRealNameList({pageNo: pageIndex, pageSize: 10})
+      .then(res => {
+        this.userpage = res.data.list;
+        this.userpageCopy = [...this.userpage];
+      });
     }
   },
-  mounted() {
-    this.refreshdata();
+  created() {
+    MemberRealNameList({pageNo: 1, pageSize: 10})
+    .then(res => {
+      // console.log(res);
+      this.userpage = res.data.list;
+      this.userpageCopy = [...this.userpage];
+      this.totalNum = res.data.totalNumber;
+
+      // console.log(this.userpageCopy);
+      this.userpageCopy.forEach( item => {
+          if(!!item.auditStatus) item._disabled = true;
+          else item._disabled = false;
+      } )
+      
+    });
   }
 };
 </script>
+
+<style scoped>
+  .pageWrapper {
+    margin: 20px;
+    text-align: right;
+  }
+  .functionWrapper{
+    padding: 20px 0 ;
+  }
+  .functionWrapper Button {
+    margin-right: 10px;
+  }
+  .queryWrapper{
+    float: left;
+  }
+  .buttonWrapper{
+    float: right;
+  }
+</style>

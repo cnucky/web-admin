@@ -2,13 +2,15 @@
 	<div>
 		<Row class="btnRow">
 			<div class="filterWays clearfix" >
+
 				<Select class="filterSelect" v-model="widthdrawTitle" placeholder="提现方式" @on-change="filterWithdrawWays">
-					<Option v-for="(item, index) in widthdrawWays" :value="index" :key="item.id">{{ item }}</Option>
+					<Option v-for="(item, index) in widthdrawWays" :value="item.status" :key="item.id">{{ item.container }}</Option>
 				</Select>
 
 				<Select class="filterSelect" v-model="statusTitle" placeholder="状态" @on-change="filterStatus">
-					<Option v-for="(item, index) in statuWays" :value="index" :key="item.id">{{ item }}</Option>
+					<Option v-for="(item, index) in statuWays" :value="item.status" :key="item.id">{{ item.container }}</Option>
 				</Select>
+
 			</div>
 			<div class=" passBtnContainer clearfix ">
 				<Button type="error" @click="ifPassAll(false)">一键审核不通过</Button>
@@ -46,16 +48,16 @@ export default{
 			widthdrawTitle: '',
 			statusTitle: '',
 			widthdrawWays: [
-				'全部',
-				'自动提现',
-				'人工审核提现'
+        { status: 0, container: '自动提现' },
+        { status: 1, container: '人工审核提现' },
+        { status: 'all', container: '全部' },
 			],
 			statuWays: [
-				'全部',
-				'审核中',
-				'等待放币',
-				'失败',
-				'成功'
+        { status: 0, container: '审核中' },
+        { status: 1, container: '等待放币' },
+        { status: 2, container: '失败' },
+        { status: 3, container: '成功' },
+        { status: 'all', container: '全部' },
 			],
 			userpage: [],
 			userpageCopy: [],
@@ -72,6 +74,11 @@ export default{
 					type: 'selection',
 					width: 60,
 					align: 'center',
+        },
+        {
+					title: '编号',
+          key: 'id',
+          width: 70,
 				},
 				{
 					title: '会员ID',
@@ -107,7 +114,9 @@ export default{
 					title: '提现方式',
 					key: 'isAuto',
 					render: (h, params) => {
-						const row=params.row;
+            const row = params.row;
+            console.log(row);
+            
 						const isAuto=row.isAuto=='0'?'自动提现':'人工审核提现';
 						return h('span', {
 						},isAuto)
@@ -163,8 +172,8 @@ export default{
 							on: {
 								click: () => {
                   this.$router.push('/finance/auditdetail');
-                  console.log(obj);
                   let userDetail = {
+                    id: obj.row.id,
 										status: obj.row.status,
                     memberId: obj.row.memberId,
                     username: obj.row.memberUsername,
@@ -203,30 +212,32 @@ export default{
 			this.userpageCopy = userpageCopy_2;
 		},
 		filterStatus(val) {
-			this.filterWithdrawWays(this.filterVal);
-			if (val === 1) this.filterStatusFn(0);
-			else if (val === 2) this.filterStatusFn(1);
-			else if (val === 3) this.filterStatusFn(2);
-			else if (val === 4) this.filterStatusFn(3);
+      alert(val);
+			// this.filterWithdrawWays(this.filterVal);
+			// if (val === 1) this.filterStatusFn(0);
+			// else if (val === 2) this.filterStatusFn(1);
+			// else if (val === 3) this.filterStatusFn(2);
+			// else if (val === 4) this.filterStatusFn(3);
 		},
 		filterWithdrawWays(val) {
-			this.filterVal = val;
-			this.userpageCopy = this.userpage;
-			if(val === 1 ) {
-				this.userpageCopy = [];
-				this.userpage.forEach( item => {
-					if(!item.isAuto){
-						this.userpageCopy.push(item)
-					}
-				})
-			}else if (val === 2) {
-				this.userpageCopy = [];
-				this.userpage.forEach( item => {
-					if(item.isAuto === 1){
-						this.userpageCopy.push(item)
-					}
-				})
-			} 
+      alert(val)
+			// this.filterVal = val;
+			// this.userpageCopy = this.userpage;
+			// if(val === 1 ) {
+			// 	this.userpageCopy = [];
+			// 	this.userpage.forEach( item => {
+			// 		if(!item.isAuto){
+			// 			this.userpageCopy.push(item)
+			// 		}
+			// 	})
+			// }else if (val === 2) {
+			// 	this.userpageCopy = [];
+			// 	this.userpage.forEach( item => {
+			// 		if(item.isAuto === 1){
+			// 			this.userpageCopy.push(item)
+			// 		}
+			// 	})
+			// } 
 		},
 		select(selection){
 			this.selectedNumArr = [];
@@ -245,15 +256,6 @@ export default{
 					this.checkable();
 				})
 			})
-		},
-			//单个通过 或者 不通过
-		perPass () {
-			alert('Y');
-			this.operateModel = false;
-		},
-		perNoPass () {
-			alert("N")
-			this.operateModel = false;
 		},
 		// 一键通过
 		ifPassAll(bol){
@@ -275,14 +277,15 @@ export default{
 			.then( res => {
 				this.userpage = res.data.list;
 				this.checkable();
-				this.filterWithdrawWays(this.filterVal);
+				// this.filterWithdrawWays(this.filterVal);
 			})
 		}
 	},
 	created(){
 		withdrawManage({ pageNo: 1, pageSize: 10 })
 		.then( res => {
-			this.userpage = res.data.list;
+      this.userpage = res.data.list;
+      this.userpageCopy = [...this.userpage];
 			this.checkable();
 			this.pageNum = res.data.totalNumber;
 		})

@@ -4,7 +4,7 @@ import { BASEURL, fetch, post, patch } from './http.js'
 export const BASICURL = BASEURL;
 
 export const signIn = data => post('admin/system/employee/sign/in', data);
-//GET获取 "财务管理"=>"提币管理"
+//GET获取 "财务管理"=>"提币管理(记录)"
 export const withdrawManage = data => fetch('admin/finance/withdraw-record/page-query', data);
 
 //Patch获取 "财务管理"=>"提币管理"   "一键通过"
@@ -21,3 +21,19 @@ export const personalTradeInfo = data => fetch(`/admin/finance/withdraw-record/$
 
 //GET获取 "审核详情"=>"个人所有交易记录"
 export const allTradeInfo = () => post('admin/finance/member-transaction/all');
+
+//GET获取 "财务管理"=>"个人记录"
+export const perTradeAll = data => post('admin/finance/member-transaction/page-query', data);
+
+//POST获取 "会员实名审核"
+//axios.post("admin/member/member-application/page-query").
+export const MemberRealNameList = data => post('admin/member/member-application/page-query', data);
+
+//POST获取 "会员实名审核详情页"
+export const MemberRealNameDetail = data => post('admin/member/member-application/detail', data);
+
+//POST获取 "会员实名审核通过"
+export const memberCheckPass = data => patch(`admin/member/member-application/${data}/pass`);
+
+//POST获取 "会员实名审核不通过" 较为特殊
+export const memberCheckNotPass = data => patch(`admin/member/member-application/${data.memberID}/no-pass?${data.rejectReason}`);
